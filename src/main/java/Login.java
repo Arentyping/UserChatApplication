@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import static constants.RegexConstants.*;
@@ -635,18 +636,52 @@ public class Login extends JFrame implements KeyListener{
                         offlineSound();
                         dispose();
 
+
+
                         String role = resultSet.getString("Roles");
                         if (resultSet.getString("Roles").equalsIgnoreCase("Administrator")) {
                             //Admin Control - bahala na si Justine
                             loginSound();
-                            new MainPanel(userF,role);
+                            try {
+                                // Try to connect to the chat server with this username
+                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
+                                new MainPanel(userF, role);
+                                new ChatWindow(userF, chatClient);
+                            } catch (IOException e) {
+                                // Server rejected the login OR could not connect
+                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
+                                // Optionally: Return or skip opening ChatWindow
+                                return;
+                            }
+
                         } else if (resultSet.getString("Roles").equalsIgnoreCase("User")) {
-                            //Code ni Rommards
                             loginSound();
-                            new MainPanel(userF,role);
+                            try {
+                                // Try to connect to the chat server with this username
+                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
+                                new MainPanel(userF, role);
+                                new ChatWindow(userF, chatClient);
+                            } catch (IOException e) {
+                                // Server rejected the login OR could not connect
+                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
+                                // Optionally: Return or skip opening ChatWindow
+                                return;
+                            }
                         } else {
-                            loginSound();
-                            new MainPanel(userF,role);
+                            try {
+                                // Try to connect to the chat server with this username
+                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
+                                new MainPanel(userF, role);
+                                new ChatWindow(userF, chatClient);
+                            } catch (IOException e) {
+                                // Server rejected the login OR could not connect
+                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
+                                // Optionally: Return or skip opening ChatWindow
+                                return;
+                            }
                         }
 
                     } else {
