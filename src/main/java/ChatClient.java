@@ -1,5 +1,8 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChatClient {
     private Socket socket;
@@ -7,6 +10,8 @@ public class ChatClient {
     private BufferedWriter output;
     private String username;
     private OnMessageReceived listener;
+    // Global at top of ChatServer class:
+    private static final Set<String> connectedUsers = Collections.synchronizedSet(new HashSet<>());
 
     public ChatClient(String serverAddress, int port, String username) throws IOException {
         this.socket = new Socket(serverAddress, port);

@@ -5,6 +5,9 @@ import com.formdev.flatlaf.fonts.inter.FlatInterFont;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.ui.FlatLineBorder;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import org.mindrot.jbcrypt.BCrypt;
 import javax.swing.*;
 import java.awt.*;
@@ -589,123 +592,140 @@ public class Login extends JFrame implements KeyListener{
     }
 
     private void handleLogin() {
-        lButton.setEnabled(false);
-        lButton.setText("Please wait...");
+        try {
+            lButton.setEnabled(false);
+            lButton.setText("Please wait...");
 
-        //Checks if the user is locked out
-        if (System.currentTimeMillis() < lockTime) {
-            long remainingTime = (lockTime - System.currentTimeMillis()) / 1000;
-            errorSound();
-            JOptionPane.showMessageDialog(contentPanel, "Too many failed attempts. Please wait " + remainingTime + " seconds.", "Login Locked", JOptionPane.WARNING_MESSAGE);
-            lPass.setText("");
-            return;
-        }
+            //Checks if the user is locked out
+            if (System.currentTimeMillis() < lockTime) {
+                long remainingTime = (lockTime - System.currentTimeMillis()) / 1000;
+                errorSound();
+                JOptionPane.showMessageDialog(contentPanel, "Too many failed attempts. Please wait " + remainingTime + " seconds.", "Login Locked", JOptionPane.WARNING_MESSAGE);
+                lPass.setText("");
+                return;
+            }
 
-        //Get inputs from fields
-        String userF = lUser.getText();
-        String passF = new String(lPass.getPassword());
+            //Get inputs from fields
+            String userF = lUser.getText();
+            String passF = new String(lPass.getPassword());
 
-        //Checks empty field
-        if (userF.isEmpty() || passF.isEmpty()) {
-            lErrorLabel.setText("<html><div style='width:156px'>Please enter credentials, Text field cannot be empty.</div></html>");
-            errorSound();
-            handleErrorUI();
-            handleFailedAttempt();
-            return;
-        }
+            //Checks empty field
+            if (userF.isEmpty() || passF.isEmpty()) {
+                lErrorLabel.setText("<html><div style='width:156px'>Please enter credentials, Text field cannot be empty.</div></html>");
+                errorSound();
+                handleErrorUI();
+                handleFailedAttempt();
+                return;
+            }
 
-        boolean isEmail = userF.endsWith("@gmail.com");
+            boolean isEmail = userF.endsWith("@gmail.com");
 
-        //Checks existing user with correct password
-        try (Connection connection = Database.getConnection()) {
-            String selectQuery = isEmail ? "SELECT * FROM Credentials WHERE BINARY Emails = ?" : "SELECT * FROM Credentials WHERE BINARY Users = ?";
-            try (PreparedStatement statement = connection.prepareStatement(selectQuery)) {
-                statement.setString(1, userF);
-                ResultSet resultSet = statement.executeQuery();
+            //Checks existing user with correct password
+            try (Connection connection = Database.getConnection()) {
+                String selectQuery = isEmail ? "SELECT * FROM Credentials WHERE BINARY Emails = ?" : "SELECT * FROM Credentials WHERE BINARY Users = ?";
+                try (PreparedStatement statement = connection.prepareStatement(selectQuery)) {
+                    statement.setString(1, userF);
+                    ResultSet resultSet = statement.executeQuery();
 
-                if (resultSet.next()) {
-                    // Verify the input password and recorded hash
-                    if (BCrypt.checkpw(passF, resultSet.getString("Passwords"))) {
-                        loginSound();
-                        JOptionPane.showMessageDialog(contentPanel, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-                        //Reset attempts
-                        loginAttempt = 0;
-
-                        //After successful login
-                        offlineSound();
-                        dispose();
-
-
-
-                        String role = resultSet.getString("Roles");
-                        if (resultSet.getString("Roles").equalsIgnoreCase("Administrator")) {
-                            //Admin Control - bahala na si Justine
+                    if (resultSet.next()) {
+                        // Verify the input password and recorded hash
+                        if (BCrypt.checkpw(passF, resultSet.getString("Passwords"))) {
                             loginSound();
-                            try {
+                            JOptionPane.showMessageDialog(contentPanel, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                            //Reset attempts
+                            loginAttempt = 0;
+
+                            //After successful login
+                            offlineSound();
+                            dispose();
+
+
+                            String role = resultSet.getString("Roles");
+                            if (resultSet.getString("Roles").equalsIgnoreCase("Administrator")) {
+                                //Admin Control - bahala na si Justine
+                                loginSound();
                                 // Try to connect to the chat server with this username
-                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+//                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
                                 // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                new MainPanel(userF, role);
-                                new ChatWindow(userF, chatClient);
-                            } catch (IOException e) {
-                                // Server rejected the login OR could not connect
-                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
-                                // Optionally: Return or skip opening ChatWindow
-                                return;
+                                Platform.runLater(() -> {
+                                    new MainPanel(userF, role);
+                                    try {
+                                        new ChatWindow(userF).start(new Stage());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+
+
+                            } else if (resultSet.getString("Roles").equalsIgnoreCase("User")) {
+                                loginSound();
+                                try {
+                                    // Try to connect to the chat server with this username
+//                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                    // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
+                                    Platform.runLater(() -> {
+                                        new MainPanel(userF, role);
+                                        try {
+                                            new ChatWindow(userF).start(new Stage());
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+
+                                } catch (Exception e) {
+                                    // Server rejected the login OR could not connect
+                                    JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
+                                    // Optionally: Return or skip opening ChatWindow
+                                    return;
+                                }
+                            } else {
+                                try {
+                                    // Try to connect to the chat server with this username
+//                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                    // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
+                                    Platform.runLater(() -> {
+                                        new MainPanel(userF, role);
+                                        try {
+                                            new ChatWindow(userF).start(new Stage());
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+
+                                } catch (Exception e) {
+                                    // Server rejected the login OR could not connect
+                                    JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
+                                    // Optionally: Return or skip opening ChatWindow
+                                    return;
+                                }
                             }
 
-                        } else if (resultSet.getString("Roles").equalsIgnoreCase("User")) {
-                            loginSound();
-                            try {
-                                // Try to connect to the chat server with this username
-                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
-                                // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                new MainPanel(userF, role);
-                                new ChatWindow(userF, chatClient);
-                            } catch (IOException e) {
-                                // Server rejected the login OR could not connect
-                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
-                                // Optionally: Return or skip opening ChatWindow
-                                return;
-                            }
                         } else {
-                            try {
-                                // Try to connect to the chat server with this username
-                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
-                                // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                new MainPanel(userF, role);
-                                new ChatWindow(userF, chatClient);
-                            } catch (IOException e) {
-                                // Server rejected the login OR could not connect
-                                JOptionPane.showMessageDialog(contentPanel, "Could not connect to Chat Server:\n" + e.getMessage(), "Chat Error", JOptionPane.ERROR_MESSAGE);
-                                // Optionally: Return or skip opening ChatWindow
-                                return;
-                            }
+                            lErrorLabel.setText("<html><div style='width:156px'>Password incorrect, try again.</div></html>");
+                            errorSound();
+                            handleErrorUI();
+                            lPass.setText("");
+                            handleFailedAttempt();
                         }
-
                     } else {
-                        lErrorLabel.setText("<html><div style='width:156px'>Password incorrect, try again.</div></html>");
+                        lErrorLabel.setText("<html><div style='width:156px'>Username doesn't exist.</div></html>");
                         errorSound();
                         handleErrorUI();
                         lPass.setText("");
                         handleFailedAttempt();
                     }
-                } else {
-                    lErrorLabel.setText("<html><div style='width:156px'>Username doesn't exist.</div></html>");
-                    errorSound();
-                    handleErrorUI();
-                    lPass.setText("");
-                    handleFailedAttempt();
                 }
+            } catch (SQLException ex) {
+                errorSound();
+                JOptionPane.showMessageDialog(contentPanel, "Database error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (SQLException ex) {
-            errorSound();
-            JOptionPane.showMessageDialog(contentPanel, "Database error: " + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
 
-        lButton.setEnabled(true);
-        lButton.setText("Log In");
+
+        } finally {
+            lButton.setEnabled(true);
+            lButton.setText("Log In");
+        }
     }
 
     //Text Field Designer
