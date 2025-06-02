@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
 import constants.RegexConstants;
@@ -647,12 +648,12 @@ public class Login extends JFrame implements KeyListener{
                                 // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
 
                                     new MainPanel(userF, role);
-                                    try {
-                                        ChatClient chatClient = new ChatClient("localhost", 12345, userF);
-                                        new ChatWindow(userF,chatClient);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
+//                                    try {
+//                                        ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+//                                        new ChatWindow(userF,chatClient);
+//                                    } catch (Exception e) {
+//                                        e.printStackTrace();
+//                                    }
 
 
 
@@ -664,12 +665,12 @@ public class Login extends JFrame implements KeyListener{
                                     // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
 
                                         new MainPanel(userF, role);
-                                        try {
-                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
-                                            new ChatWindow(userF,chatClient);
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
+//                                        try {
+//                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+//                                            new ChatWindow(userF,chatClient);
+//                                        } catch (Exception e) {
+//                                            e.printStackTrace();
+//                                        }
 
 
                                 } catch (Exception e) {
@@ -685,12 +686,12 @@ public class Login extends JFrame implements KeyListener{
                                     // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
 
                                         new MainPanel(userF, role);
-                                        try {
-                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
-                                            new ChatWindow(userF,chatClient);
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
+//                                        try {
+//                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+//                                            new ChatWindow(userF,chatClient);
+//                                        } catch (Exception e) {
+//                                            e.printStackTrace();
+//                                        }
 
 
                                 } catch (Exception e) {
@@ -870,10 +871,14 @@ class MainPanel extends JFrame{
         JButton adminButton = new JButton("Admin Controls");
         logoutButton.setFocusable(false);
         logoutButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        logoutButton.setBorder(BorderFactory.createLineBorder(ORANGE, 2));
 
-        logoutButton.setBackground(WHITE);
-        logoutButton.setForeground(ORANGE);
+        JButton chatButton = new JButton("Join Chatroom +");
+        chatButton.setFocusable(false);
+        chatButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        chatButton.setFont(new Font("Arial", Font.BOLD, 16));
+        chatButton.setPreferredSize(new Dimension(50, 50));
+        chatButton.setFocusable(false);
+
         logoutButton.setFont(new Font("Arial", Font.BOLD, 16));
         logoutButton.setPreferredSize(new Dimension(50, 50));
         logoutButton.setFocusable(false);
@@ -898,18 +903,57 @@ class MainPanel extends JFrame{
                 logoutButton.setForeground(ORANGE);
             }
         });
-        adminButton.addActionListener( e -> new AdminDashboard());
+        adminButton.addActionListener(e -> new AdminDashboard());
+        adminButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                adminButton.setBackground(ORANGE);
+                adminButton.setForeground(WHITE);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                adminButton.setBackground(WHITE);
+                adminButton.setForeground(ORANGE);
+            }
+        });
+        ChatClient chatClient;
+        try {
+            chatClient = new ChatClient("localhost", 12345, username);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        chatButton.addActionListener(e -> new ChatWindow(username, chatClient));
+        chatButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                chatButton.setBackground(new Color(40, 41, 39));
+                chatButton.setForeground(new Color(144, 218, 65));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                chatButton.setBackground(new Color(67, 67, 67));
+                chatButton.setForeground(new Color(144, 218, 65));
+            }
+        });
 
         JPanel contentPanel = new JPanel(new BorderLayout());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
         contentPanel.setBackground(DGRAY);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        contentPanel.add(usernameLabel, BorderLayout.NORTH);
-        if (role.equals("Administrator")){
-            contentPanel.add(adminButton, BorderLayout.CENTER);
-        }else{
-            contentPanel.add(welcomeLabel, BorderLayout.CENTER);
+        contentPanel.add(usernameLabel, BorderLayout.CENTER);
+        contentPanel.add(buttonPanel, BorderLayout.SOUTH);
+        contentPanel.add(buttonPanel);
+        if (role.equals("Administrator")) {
+            buttonPanel.add(adminButton);
+        } else {
+            buttonPanel.add(welcomeLabel);
         }
-        contentPanel.add(logoutButton, BorderLayout.SOUTH);
+        buttonPanel.add(chatButton);
+        buttonPanel.add(logoutButton);
         add(contentPanel, BorderLayout.CENTER);
         setVisible(true);
     }

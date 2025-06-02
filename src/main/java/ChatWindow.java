@@ -86,7 +86,7 @@ public class ChatWindow extends JFrame implements ChatClient.OnMessageReceived {
             userListModel.clear();
             for (String user : users) {
                 if (!user.isEmpty()) {
-                    userListModel.addElement(" ⬤ " + user);
+                    userListModel.addElement(" ⚈ " + user);
                 }
             }
         });
