@@ -1,73 +1,56 @@
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javax.swing.*;
+import java.awt.*;
 
-import java.io.IOException;
-
-public class ChatWindow extends Application {
+public class ChatWindow extends JFrame implements ChatClient.OnMessageReceived {
+    private JTextArea chatArea;
+    private JTextField inputField;
+    private ChatClient chatClient;
     private String username;
-    private ChatClient client;
 
-    private VBox messagesBox;
-    private TextField inputField;
-
-    public ChatWindow(String username) {
+    public ChatWindow(String username, ChatClient chatClient) {
         this.username = username;
-    }
+        this.chatClient = chatClient;
+        this.chatClient.setOnMessageReceived(this); // Register this window as listener
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Chat - " + username);
+        // Set up GUI
+        setTitle("Chat - " + username);
+        setSize(400, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        messagesBox = new VBox(10);
-        messagesBox.setPadding(new Insets(10));
-        ScrollPane scrollPane = new ScrollPane(messagesBox);
-        scrollPane.setFitToWidth(true);
+        chatArea = new JTextArea();
+        chatArea.setText("Heehee");
+        chatArea.setBackground(Color.YELLOW);
+        chatArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(chatArea);
 
-        inputField = new TextField();
-        inputField.setPromptText("Type a message...");
-        inputField.setOnAction(e -> sendMessage());
-
-        BorderPane root = new BorderPane();
-        root.setCenter(scrollPane);
-        root.setBottom(inputField);
-
-        Scene scene = new Scene(root, 400, 500);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-
-        try {
-            client = new ChatClient("localhost", 12345, username);
-            client.setOnMessageReceived(this::displayMessage);
-        } catch (IOException e) {
-            displayMessage("⚠ Error connecting to server: " + e.getMessage());
-        }
-
-        primaryStage.setOnCloseRequest(e -> {
-            client.closeEverything();
+        inputField = new JTextField();
+        inputField.addActionListener(e -> {
+            String msg = inputField.getText();
+            if (!msg.isEmpty()) {
+                chatClient.sendMessage(msg);
+                inputField.setText("");
+            }
         });
+
+        add(scrollPane, "Center");
+        add(inputField, "South");
+
+        setVisible(true);
     }
 
-    private void sendMessage() {
-        String msg = inputField.getText().trim();
-        if (!msg.isEmpty()) {
-            client.sendMessage(msg);
-            inputField.clear();
-        }
-    }
+    // Receive messages from ChatClient
+    @Override
+    public void onMessage(String msg) {
+        SwingUtilities.invokeLater(() -> {
+            chatArea.append(msg + "\n");
+            chatArea.setCaretPosition(chatArea.getDocument().getLength()); // Auto-scroll
 
-    private void displayMessage(String msg) {
-        Platform.runLater(() -> {
-            Label messageLabel = new Label(msg);
-            messageLabel.setWrapText(true);
-            messagesBox.getChildren().add(messageLabel);
+            System.out.println("onMessage called with: " + msg); // 👈 debug print
+            SwingUtilities.invokeLater(() -> {
+                chatArea.append(msg + "\n");
+                chatArea.setCaretPosition(chatArea.getDocument().getLength());
+            });
         });
     }
 }

@@ -5,17 +5,14 @@ import com.formdev.flatlaf.fonts.inter.FlatInterFont;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.ui.FlatLineBorder;
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.stage.Stage;
 import org.mindrot.jbcrypt.BCrypt;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Dimension;
 import java.awt.event.*;
-import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import constants.RegexConstants;
 import static constants.RegexConstants.*;
 import static constants.DatabaseConstants.*;
 import static constants.Colors.*;
@@ -648,14 +645,15 @@ public class Login extends JFrame implements KeyListener{
                                 // Try to connect to the chat server with this username
 //                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
                                 // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                Platform.runLater(() -> {
+
                                     new MainPanel(userF, role);
                                     try {
-                                        new ChatWindow(userF).start(new Stage());
+                                        ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                        new ChatWindow(userF,chatClient);
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
-                                });
+
 
 
                             } else if (resultSet.getString("Roles").equalsIgnoreCase("User")) {
@@ -664,14 +662,15 @@ public class Login extends JFrame implements KeyListener{
                                     // Try to connect to the chat server with this username
 //                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
                                     // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                    Platform.runLater(() -> {
+
                                         new MainPanel(userF, role);
                                         try {
-                                            new ChatWindow(userF).start(new Stage());
+                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                            new ChatWindow(userF,chatClient);
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
-                                    });
+
 
                                 } catch (Exception e) {
                                     // Server rejected the login OR could not connect
@@ -684,14 +683,15 @@ public class Login extends JFrame implements KeyListener{
                                     // Try to connect to the chat server with this username
 //                                ChatClient chatClient = new ChatClient("localhost", 12345, userF);
                                     // Pass the chat client into your ChatWindow (update ChatWindow constructor if needed)
-                                    Platform.runLater(() -> {
+
                                         new MainPanel(userF, role);
                                         try {
-                                            new ChatWindow(userF).start(new Stage());
+                                            ChatClient chatClient = new ChatClient("localhost", 12345, userF);
+                                            new ChatWindow(userF,chatClient);
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
-                                    });
+
 
                                 } catch (Exception e) {
                                     // Server rejected the login OR could not connect

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChatClient {
+
     private Socket socket;
     private BufferedReader input;
     private BufferedWriter output;
@@ -41,13 +42,15 @@ public class ChatClient {
 
     public void sendMessage(String msg) {
         try {
-            output.write(username + ": " + msg);
+            output.write(msg);  // JUST the message
             output.newLine();
             output.flush();
         } catch (IOException e) {
             System.out.println("Failed to send message");
         }
     }
+
+
 
     public void setOnMessageReceived(OnMessageReceived listener) {
         this.listener = listener;
