@@ -27,9 +27,21 @@ public class ChatServer {
 
     static void broadcast(String message, ClientHandler sender) {
         for (ClientHandler client : clients) {
-            if (client != sender) {
-                client.sendMessage(message);
+            client.sendMessage(message); // include sender
+        }
+        sendUserList();
+    }
+
+    static void sendUserList() {
+        StringBuilder userList = new StringBuilder("!userlist "); // Prefix for special message
+        synchronized (connectedUsers) {
+            for (String user : connectedUsers) {
+                userList.append(user).append(",");
             }
+        }
+        String userListMsg = userList.toString();
+        for (ClientHandler client : clients) {
+            client.sendMessage(userListMsg);
         }
     }
 

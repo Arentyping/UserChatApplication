@@ -11,8 +11,6 @@ public class ChatClient {
     private BufferedWriter output;
     private String username;
     private OnMessageReceived listener;
-    // Global at top of ChatServer class:
-    private static final Set<String> connectedUsers = Collections.synchronizedSet(new HashSet<>());
 
     public ChatClient(String serverAddress, int port, String username) throws IOException {
         this.socket = new Socket(serverAddress, port);
@@ -30,6 +28,13 @@ public class ChatClient {
             try {
                 String msg;
                 while ((msg = input.readLine()) != null) {
+                    if (msg.startsWith("!userlist ")) {
+                        String[] users = msg.substring(10).split(",");
+                        if (listener != null) {
+                            listener.onUserListUpdated(users); // NEW method
+                        }
+                        continue;
+                    }
                     if (listener != null) {
                         listener.onMessage(msg);
                     }
@@ -39,6 +44,12 @@ public class ChatClient {
             }
         }).start();
     }
+
+    public interface OnMessageReceived {
+        void onMessage(String msg);
+        default void onUserListUpdated(String[] users) {} // Optional
+    }
+
 
     public void sendMessage(String msg) {
         try {
@@ -56,9 +67,6 @@ public class ChatClient {
         this.listener = listener;
     }
 
-    public interface OnMessageReceived {
-        void onMessage(String msg);
-    }
 
     public void closeEverything() {
         try {

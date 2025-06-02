@@ -844,7 +844,7 @@ public class Login extends JFrame implements KeyListener{
 class MainPanel extends JFrame{
     public MainPanel(String username, String role) {
         setTitle("Main Panel : @" + username);
-        setSize(900, 500);
+        setSize(512, 288);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -881,8 +881,10 @@ class MainPanel extends JFrame{
             offlineSound();
             JOptionPane.showMessageDialog(this, "You are logged out!", "Logout", JOptionPane.INFORMATION_MESSAGE);
             dispose();
+            System.exit(0);
             new Login();
         });
+
         logoutButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
